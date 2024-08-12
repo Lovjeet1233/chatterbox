@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Chatterbox</title>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+      <style>
+         body {
+            background-image: url('https://plus.unsplash.com/premium_photo-1670595337767-1af7ce73df5c?q=80&w=2038&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'); /* Replace with your image URL */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-color: #F2F2F2; /* Light Gray as fallback */
+            font-family: Arial, sans-serif;
+         }
+         .chat-container {
+            max-width: 400px;
+            margin: 50px auto;
+            background-color: rgba(255, 255, 255, 0.9); /* White with slight transparency */
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+         }
+         .chat-header {
+            background-color: #9B51E0; /* Purple */
+            padding: 10px;
+            color: white;
+            text-align: center;
+         }
+         .chat-body {
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+         }
+         .chat-message {
+            margin-bottom: 15px;
+         }
+         .chat-message b {
+            color: #333333; /* Black */
+         }
+         .chat-input-container {
+            display: flex;
+            padding: 10px;
+            background-color: #F2F2F2; /* Light Gray */
+         }
+         .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #9B51E0; /* Purple */
+            border-radius: 5px;
+         }
+         .send-btn {
+            background-color: #9B51E0; /* Purple */
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            margin-left: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+         }
+         .send-btn:hover {
+            background-color: #7E40B8; /* Slightly darker purple */
+         }
+         .error-container {
+            color: #EB5757; /* Red */
+            text-align: center;
+            margin-bottom: 10px;
+         }
+         .user-set-container {
+            padding: 20px;
+         }
+         .user-set-container input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 2px solid #9B51E0; /* Purple */
+            border-radius: 5px;
+         }
+         .user-set-container button {
+            width: 100%;
+            background-color: #27AE60; /* Green */
+            border: none;
+            color: white;
+            padding: 10px 0;
+            border-radius: 5px;
+            cursor: pointer;
+         }
+         .user-set-container button:hover {
+            background-color: #219653; /* Slightly darker green */
+         }
+      </style>
+   </head>
+   <body>
+      <div class="chat-container">
+         <div class="chat-header">Chatterbox</div>
+         <div id="error-container" class="error-container"></div>
+         <div class="user-set-container">
+            <input id="name" type="text" name="name" value="" placeholder="Enter your name!">
+            <button type="button" name="button" onclick="setUsername()">Let me chat!</button>
+         </div>
+         <div id="chat-body" class="chat-body"></div>
+         <div class="chat-input-container" id="chat-input-container" style="display:none;">
+            <input type="text" id="message" class="chat-input" placeholder="Type your message">
+            <button type="button" class="send-btn" onclick="sendMessage()">Send</button>
+         </div>
+      </div>
+
+      <script src="/socket.io/socket.io.js"></script>
+      <script>
+         var socket = io();
+         var user;
+         
+         function setUsername(){
+            socket.emit('setUsername', document.getElementById('name').value);
+         };
+
+         socket.on('userExists', function(data){
+            document.getElementById('error-container').innerHTML = data;
+         });
+
+         socket.on('userSet', function(data){
+            user = data.username;
+            document.querySelector('.user-set-container').style.display = 'none';
+            document.getElementById('chat-input-container').style.display = 'flex';
+         });
+
+         function sendMessage(){
+            var msg = document.getElementById('message').value;
+            if(msg){
+               socket.emit('msg', {message: msg, user: user});
+               document.getElementById('message').value = '';
+            }
+         }
+
+         socket.on('newmsg', function(data){
+            if(user){
+               document.getElementById('chat-body').innerHTML += '<div class="chat-message"><b>' + data.user + '</b>: ' + data.message + '</div>';
+               document.getElementById('chat-body').scrollTop = document.getElementById('chat-body').scrollHeight;
+            }
+         });
+      </script>
+   </body>
+</html>
